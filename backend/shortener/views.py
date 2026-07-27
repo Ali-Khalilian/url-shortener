@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import redirect, get_object_or_404
-from .models import Link
+from .models import Link, Click
 from .serializers import LinkSerializer
 import random
 import string
@@ -31,5 +31,7 @@ class RedirectLinkAPIView(APIView):
     def get(self, request, short_code):
 
         link = get_object_or_404(Link, short_code=short_code)
+
+        Click.objects.create(link=link, ip_address= request.META.get("REMOTE_ADDR"), user_agent=request.META.get("HTTP_USER_AGENT"))
 
         return redirect(link.original_url)
