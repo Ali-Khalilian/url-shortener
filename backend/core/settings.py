@@ -2,6 +2,8 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
+from celery.schedules import crontab
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 load_dotenv()
@@ -97,4 +99,23 @@ CACHES = {
             "CLIENT_CLASS": "django_redis.client.DefaultClient",
         }
     }
+}
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+
+
+
+CELERY_BEAT_SCHEDULE = {
+
+    "daily-click-report": {
+
+        "task": "shortener.tasks.daily_click_report",
+
+        "schedule": crontab(
+            hour=2,
+            minute=0,
+        ),
+
+    },
+
 }

@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from django.shortcuts import redirect, get_object_or_404
 from django.core.cache import cache
+from .tasks import save_click
 
 from .models import Link, Click
 from .serializers import LinkSerializer
@@ -38,10 +39,10 @@ class RedirectLinkAPIView(APIView):
 
         if cached_link:
 
-            Click.objects.create(
-                link_id=cached_link["id"],
-                ip_address=request.META.get("REMOTE_ADDR"),
-                user_agent=request.META.get("HTTP_USER_AGENT"),
+            save_click.delay(
+                cached_link["id"],
+                request.META.get("REMOTE_ADDR"),
+                request.META.get("HTTP_USER_AGENT"),
             )
 
             return redirect(cached_link["url"])
@@ -55,10 +56,10 @@ class RedirectLinkAPIView(APIView):
         )
 
         # 4. Save click analytics
-        Click.objects.create(
-            link=link,
-            ip_address=request.META.get("REMOTE_ADDR"),
-            user_agent=request.META.get("HTTP_USER_AGENT"),
+        save_click.delay(
+            link.id,
+            request.META.get("REMOTE_ADDR"),
+            request.META.get("HTTP_USER_AGENT"),
         )
 
         # 5. Redirect
